@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Book Appointment</title>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+<h2>Book Appointment Form</h2>
+<form id="appointmentForm">
+    <input type="text" id="username" placeholder="Username" required><br>
+    <input type="email" id="email" placeholder="Email" required><br>
+    <input type="tel" id="mobile" placeholder="Mobile Number" required><br>
+    <button type="button" onclick="submitForm()">Submit</button>
+</form>
+<h2>Users</h2>
+<ul id="usersList"></ul>
+
+<script>
+async function submitForm() {
+    const username = document.getElementById('username').value;
+    const email = document.getElementById('email').value;
+    const mobile = document.getElementById('mobile').value;
+
+    const response = await axios.post('/users', {
+        username, email, mobile
+    });
+    addUserToList(response.data);
+}
+
+function addUserToList(user) {
+    const userElement = document.createElement('li');
+    userElement.textContent = `${user.username} - ${user.email} - ${user.mobile} `;
+    
+    const editButton = document.createElement('button');
+    editButton.textContent = 'Edit';
+    editButton.onclick = () => editUser(user.id);
+
+    const deleteButton = document.createElement('button');
+    deleteButton.textContent = 'Delete';
+    deleteButton.onclick = () => deleteUser(user.id);
+
+    userElement.appendChild(editButton);
+    userElement.appendChild(deleteButton);
+
+    document.getElementById('usersList').appendChild(userElement);
+}
+
+async function loadUsers() {
+    const response = await axios.get('/users');
+    response.data.forEach(addUserToList);
+}
+
+async function deleteUser(userId) {
+    try {
+        await axios.delete(`/users/${userId}`);
+        document.getElementById('usersList').innerHTML = ''; // Clear the list
+        loadUsers(); // Reload the list
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+async function editUser(userId) {
+    const username = prompt("Update the username:", "");
+    const email = prompt("Update the email:", "");
+    const mobile = prompt("Update the mobile number:", "");
+
+    try {
+        const response = await axios.put(`/users/${userId}`, {
+            username, email, mobile
+        });
+        document.getElementById('usersList').innerHTML = ''; // Clear the list
+        loadUsers(); // Reload the list with updated info
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+window.onload = loadUsers;
+</script>
+</body>
+</html>
